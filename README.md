@@ -7,19 +7,29 @@ Ein Portal für Bestellungen
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-## Bestellung per E-Mail
+## Bestellung
 
-Kundennummer und Kundenname eingeben, Artikel suchen und Kartonmengen wählen.
-Der E-Mail-Empfänger ist zunächst `enzo.notari@pregel-deutschland.de` und kann im Formular geändert werden.
-Unter **Bestellung prüfen** zeigt die E-Mail-Vorschau den Kunden und alle Artikelspalten:
-Artikelnummer, Menge_KT, Artikelbeschreibung, Gewicht_KG, Gewicht_pro_Karton_KG, Kundennummer, Kategorie und Kundenname.
+Kundennummer und Kundenname eingeben, Artikel suchen und Kartonmengen wählen. Unter **Bestellung prüfen** Mengen und E-Mail-Vorschau kontrollieren. Die Nachricht enthält eine Tabelle mit **Artikelnummer** und **Menge_KT** für SAP sowie eine zweite Tabelle mit allen Bestelldaten. Die Datenzeilen ohne Überschrift können im Büro nach SAP kopiert werden. Die tatsächliche Übernahme hängt vom SAP-Eingabefeld ab.
 
-**E-Mail mit Tabelle** lädt einen `.eml`-Entwurf mit HTML-Tabellen herunter. Im E-Mail-Programm öffnen und selbst senden. Ob die Datei direkt als bearbeitbarer Entwurf geöffnet wird, hängt vom E-Mail-Programm ab; gegebenenfalls „Erneut senden“ verwenden.
+**E-Mail senden** übermittelt die Bestellung nach Bestätigung direkt über den Vercel-Backend an `enzo.notari@pregel-deutschland.de`. Dazu den vom Administrator bereitgestellten Bestell-PIN eingeben. Es wird kein `.eml`-Entwurf mehr erzeugt.
 
-Die Nachricht enthält eine separate Tabelle mit **Artikelnummer** und **Menge_KT** für SAP sowie eine zweite Tabelle mit allen Bestelldaten. Die SAP-Datenzeilen ohne Überschrift markieren, kopieren und in SAP einfügen. Artikelnummern bleiben als Text inklusive führender Nullen erhalten. Die tatsächliche Übernahme hängt vom SAP-Eingabefeld ab.
+Alternativ kopiert **E-Mail mit Tabellen kopieren** HTML und Text in die Zwischenablage. In eine neue HTML-E-Mail mit Formatierung einfügen. Empfänger und Betreff dabei separat eingeben. Der Excel-Button auf der Hauptseite bleibt verfügbar; SheetJS ist lokal gebündelt.
 
-Excel kann weiterhin über den Excel-Button auf der Hauptseite heruntergeladen werden. Die E-Mail hat zusätzlich eine Textversion für Programme ohne HTML-Unterstützung.
+## Versand über Resend auf Vercel
 
-**E-Mail mit Tabellen kopieren** kopiert HTML und Text in die Zwischenablage. In eine neue E-Mail mit normalem Einfügen (Strg+V) übernehmen; das E-Mail-Programm muss HTML-/Rich-Text-Nachrichten erlauben. Nicht „Nur Text einfügen“ verwenden. Bei blockierter Zwischenablage die sichtbaren Tabellen in der Vorschau markieren und kopieren. Empfänger und Betreff separat im E-Mail-Programm eingeben.
+Die Schaltfläche **E-Mail senden** sendet nach Bestätigung über `/api/send-order`. Kein E-Mail-Programm und keine `.eml`-Datei nötig. Der Server erzeugt die HTML-Tabellen aus dem vorhandenen Artikelkatalog und akzeptiert keine frei wählbaren Empfänger oder HTML-Inhalte.
 
-E-Mails enthalten keine ausführbaren Kopierbuttons; im Büro die Zeilen der zweispaltigen SAP-Tabelle ohne Überschrift kopieren. Wenn ein E-Mail-Programm den `.eml`-Entwurf als Klartext anzeigt, stattdessen das Kopieren der formatierten Tabellen verwenden oder die HTML-Anzeige im E-Mail-Programm aktivieren.
+In **Vercel → Project → Settings → Environment Variables** für Production (und bei Bedarf Preview) einrichten:
+
+- `RESEND_API_KEY`: API-Key aus dem eigenen Resend-Account, nur serverseitig.
+- `ORDER_ACCESS_CODE`: selbst gewählter, langer Zugangscode; nur den berechtigten Kollegen mitteilen. Im Portal als „Bestell-PIN“ eingeben. Nicht im Repository speichern.
+
+Danach das aktuelle Deployment unter **Deployments → Redeploy** neu bereitstellen. Im Projekt Framework **Other**, ohne Build Command und mit Output Directory `.` verwenden. `vercel.json` bindet `index.html` in die Node-Funktion ein, damit der Server auf denselben Katalog zugreifen kann.
+
+Der Test-Mittelsender ist `onboarding@resend.dev`; ausschließlich `enzo.notari@pregel-deutschland.de` wird adressiert. Das muss die Adresse des Resend-Accounts sein. Für andere Empfänger später einen eigenen, verifizierten Sender konfigurieren und die serverseitige Empfängerregel anpassen. Die API-Key-Werte niemals in Chat, HTML oder GitHub eintragen.
+
+Erfolgreiche API-Antwort bedeutet Annahme durch Resend, nicht bestätigte Zustellung. Den Posteingang/Spamordner und Resend-Logs prüfen. Wiederholte Versuche desselben unveränderten Auftrags verwenden dieselbe Idempotency-ID, um doppelte Übermittlung zu vermeiden. Bei Änderungen am Auftrag entsteht eine neue ID. Beim Neuladen der Seite geht diese ID verloren.
+
+GitHub Pages und `python3 -m http.server` bieten keinen Backend-Versand; dort bleiben die Vorschau, Excel und das Kopieren formatierter Tabellen nutzbar.
+
+Backend-Prüfungen ohne echte E-Mails: `node --test tests/send-order.test.cjs`.

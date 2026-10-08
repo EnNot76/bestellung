@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/send-order.js": {
+      "includeFiles": "index.html",
+      "maxDuration": 30
+    }
+  }
+}
