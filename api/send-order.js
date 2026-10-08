@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const RECIPIENT = 'enzo.notari@pregel-deutschland.de';
+const RECIPIENT = 'ad@pregel-deutschland.de';
 let catalog;
 function getCatalog() {
   if (!catalog) {
@@ -21,7 +21,7 @@ function table(headers, rows) {
   return '<table border="1" cellpadding="7" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px"><thead><tr>' + headers.map(value => '<th style="' + cell + 'background:#edf4f5">' + escape(value) + '</th>').join('') + '</tr></thead><tbody>' + rows.map(row => '<tr>' + row.map(value => '<td style="' + cell + '">' + escape(value) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
 }
 function buildOrder(body) {
-  if (!body || typeof body !== 'object' || !/^K0\d{5}$/.test(body.customerCode) || typeof body.customerName !== 'string' || !body.customerName.trim() || body.customerName.length > 120 || /[\r\n]/.test(body.customerName) || typeof body.notes !== 'string' || body.notes.length > 1000 || !Array.isArray(body.lines) || body.lines.length < 1 || body.lines.length > 500) return null;
+  if (!body || typeof body !== 'object' || typeof body.salesRep !== 'string' || !body.salesRep.trim() || body.salesRep.length > 120 || /[\r\n]/.test(body.salesRep) || !/^K0\d{5}$/.test(body.customerCode) || typeof body.customerName !== 'string' || !body.customerName.trim() || body.customerName.length > 120 || /[\r\n]/.test(body.customerName) || typeof body.notes !== 'string' || body.notes.length > 1000 || !Array.isArray(body.lines) || body.lines.length < 1 || body.lines.length > 500) return null;
   const seen = new Set(), rows = [];
   let cartons = 0, weight = 0;
   for (const line of body.lines) {
@@ -36,9 +36,9 @@ function buildOrder(body) {
   }
   const headers = ['Artikelnummer', 'Menge_KT', 'Artikelbeschreibung', 'Gewicht_KG', 'Gewicht_pro_Karton_KG', 'Kundennummer', 'Kategorie', 'Kundenname'];
   const subject = 'PreGel Bestellung ' + body.customerCode + ' · ' + body.customerName.trim();
-  const intro = 'PreGel Kundenbestellung\nKundennummer: ' + body.customerCode + '\nKundenname: ' + body.customerName.trim();
+  const intro = 'PreGel Kundenbestellung\nAussendienstmitarbeiter: ' + body.salesRep.trim() + '\nKundennummer: ' + body.customerCode + '\nKundenname: ' + body.customerName.trim();
   const totals = 'Artikel: ' + rows.length + ' · Kartons: ' + cartons + ' · Gesamtgewicht: ' + weight.toFixed(2) + ' kg';
-  const html = '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"></head><body style="font-family:Arial,sans-serif;color:#193438"><h2>PreGel Kundenbestellung</h2><p><strong>Kundennummer:</strong> ' + escape(body.customerCode) + '<br><strong>Kundenname:</strong> ' + escape(body.customerName.trim()) + '</p><h3>Für SAP: Artikelnummer und Menge</h3><p>Datenzeilen ohne Überschrift kopieren und in SAP einfügen.</p>' + table(headers.slice(0, 2), rows.map(row => row.slice(0, 2))) + '<h3>Alle Bestelldaten</h3>' + table(headers, rows) + '<p>' + totals + '</p>' + (body.notes ? '<h3>Notizen</h3><p>' + escape(body.notes).replace(/\r?\n/g, '<br>') + '</p>' : '') + '</body></html>';
+  const html = '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"></head><body style="font-family:Arial,sans-serif;color:#193438"><h2>PreGel Kundenbestellung</h2><p><strong>Aussendienstmitarbeiter:</strong> ' + escape(body.salesRep.trim()) + '<br><strong>Kundennummer:</strong> ' + escape(body.customerCode) + '<br><strong>Kundenname:</strong> ' + escape(body.customerName.trim()) + '</p><h3>Für SAP: Artikelnummer und Menge</h3><p>Datenzeilen ohne Überschrift kopieren und in SAP einfügen.</p>' + table(headers.slice(0, 2), rows.map(row => row.slice(0, 2))) + '<h3>Alle Bestelldaten</h3>' + table(headers, rows) + '<p>' + totals + '</p>' + (body.notes ? '<h3>Notizen</h3><p>' + escape(body.notes).replace(/\r?\n/g, '<br>') + '</p>' : '') + '</body></html>';
   return { subject, html, text: intro + '\n\n' + headers.join('\t') + '\n' + rows.map(row => row.join('\t')).join('\n') + '\n\n' + totals + (body.notes ? '\n\nNotizen:\n' + body.notes : '') };
 }
 function authenticated(actual, expected) {
