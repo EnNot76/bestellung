@@ -14,7 +14,8 @@ Der E-Mail-Empfänger ist zunächst `enzo.notari@pregel-deutschland.de` und kann
 Unter **Bestellung prüfen** zeigt die E-Mail-Vorschau den Kunden und alle Artikelspalten:
 Artikelnummer, Menge_KT, Artikelbeschreibung, Gewicht_KG, Gewicht_pro_Karton_KG, Kundennummer, Kategorie und Kundenname.
 
-**E-Mail öffnen** erstellt einen Entwurf im installierten E-Mail-Programm. Die Nachricht wird nicht automatisch gesendet.
-Bei langen Bestellungen wird stattdessen eine `.eml`-Datei heruntergeladen; **E-Mail-Datei** bietet diesen Download jederzeit an.
-Ob eine `.eml`-Datei direkt als bearbeitbarer Entwurf geöffnet wird, hängt vom E-Mail-Programm ab.
-Die E-Mail enthält die Artikeldaten als Text mit tabulatorgetrennten Spalten. Excel kann zusätzlich heruntergeladen oder geteilt werden; beim Öffnen über `mailto:` wird kein Anhang automatisch hinzugefügt.
+**E-Mail mit Tabelle** lädt einen `.eml`-Entwurf mit HTML-Tabellen herunter. Im E-Mail-Programm öffnen und selbst senden. Ob die Datei direkt als bearbeitbarer Entwurf geöffnet wird, hängt vom E-Mail-Programm ab; gegebenenfalls „Erneut senden“ verwenden.
+
+Die Nachricht enthält eine separate Tabelle mit **Artikelnummer** und **Menge_KT** für SAP sowie eine zweite Tabelle mit allen Bestelldaten. Die SAP-Datenzeilen ohne Überschrift markieren, kopieren und in SAP einfügen. Artikelnummern bleiben als Text inklusive führender Nullen erhalten. Die tatsächliche Übernahme hängt vom SAP-Eingabefeld ab.
+
+Im Portal kopiert **Für SAP kopieren** dieselben zwei Spalten als tabulatorgetrennten Text ohne Überschrift. Excel kann weiterhin heruntergeladen oder geteilt werden. Die E-Mail hat zusätzlich eine Textversion für Programme ohne HTML-Unterstützung.
